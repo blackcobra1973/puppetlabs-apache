@@ -1,4 +1,5 @@
 Facter.add(:apache_version) do
+  confine kernel: %w[FreeBSD Linux]
   setcode do
     if Facter.value('osfamily') != 'Gentoo'
       if Facter::Util::Resolution.which('apachectl')

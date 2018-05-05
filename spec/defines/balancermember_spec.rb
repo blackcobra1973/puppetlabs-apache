@@ -1,25 +1,27 @@
 require 'spec_helper'
 
-describe 'apache::balancermember', :type => :define do
+describe 'apache::balancermember', type: :define do
   let :pre_condition do
     'include apache'
   end
   let :facts do
     {
-      :osfamily               => 'Debian',
-      :operatingsystem        => 'Debian',
-      :operatingsystemrelease => '6',
-      :lsbdistcodename        => 'squeeze',
-      :id                     => 'root',
-      :concat_basedir         => '/dne',
-      :path                   => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
-      :kernel                 => 'Linux',
-      :is_pe                  => false,
+      osfamily: 'Debian',
+      operatingsystem: 'Debian',
+      operatingsystemrelease: '6',
+      lsbdistcodename: 'squeeze',
+      id: 'root',
+      concat_basedir: '/dne',
+      path: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+      kernel: 'Linux',
+      is_pe: false,
     }
   end
-  describe "allows multiple balancermembers with the same url" do
+
+  describe 'allows multiple balancermembers with the same url' do
     let :pre_condition do
-      'apache::balancer {"balancer":}
+      'include apache
+      apache::balancer {"balancer":}
       apache::balancer {"balancer-external":}
       apache::balancermember {"http://127.0.0.1:8080-external": url => "http://127.0.0.1:8080/", balancer_cluster => "balancer-external"}
       '
@@ -29,16 +31,18 @@ describe 'apache::balancermember', :type => :define do
     end
     let :params do
       {
-        :options          => [],
-        :url              => 'http://127.0.0.1:8080/',
-        :balancer_cluster => 'balancer-internal'
+        options: [],
+        url: 'http://127.0.0.1:8080/',
+        balancer_cluster: 'balancer-internal',
       }
     end
-    it { should contain_concat__fragment('BalancerMember http://127.0.0.1:8080/') }
+
+    it { is_expected.to contain_concat__fragment('BalancerMember http://127.0.0.1:8080/') }
   end
-  describe "allows balancermember with a different target" do
+  describe 'allows balancermember with a different target' do
     let :pre_condition do
-      'apache::balancer {"balancername": target => "/etc/apache/balancer.conf"}
+      'include apache
+      apache::balancer {"balancername": target => "/etc/apache/balancer.conf"}
       apache::balancermember {"http://127.0.0.1:8080-external": url => "http://127.0.0.1:8080/", balancer_cluster => "balancername"}
       '
     end
@@ -47,13 +51,14 @@ describe 'apache::balancermember', :type => :define do
     end
     let :params do
       {
-        :options          => [],
-        :url              => 'http://127.0.0.1:8080/',
-        :balancer_cluster => 'balancername'
+        options: [],
+        url: 'http://127.0.0.1:8080/',
+        balancer_cluster: 'balancername',
       }
     end
-    it { should contain_concat__fragment('BalancerMember http://127.0.0.1:8080/').with({
-      :target => "apache_balancer_balancername",
-    })}
+
+    it {
+      is_expected.to contain_concat__fragment('BalancerMember http://127.0.0.1:8080/').with(target: 'apache_balancer_balancername')
+    }
   end
 end

@@ -5,7 +5,7 @@
 # Base class. Declares default vhost on port 80 and default ssl
 # vhost on port 443 listening on all interfaces and serving
 # $apache::docroot
-class { 'apache': }
+class { '::apache': }
 
 # Most basic vhost
 apache::vhost { 'first.example.com':
@@ -153,7 +153,7 @@ apache::vhost { 'sixteenth.example.com non-ssl':
       rewrite_cond => ['%{HTTPS} off'],
       rewrite_rule => ['(.*) https://%{HTTP_HOST}%{REQUEST_URI}'],
     }
-  ]
+  ],
 }
 
 # Rewrite a URL to lower case
@@ -165,9 +165,9 @@ apache::vhost { 'sixteenth.example.com non-ssl':
     { comment      => 'Rewrite to lower case',
       rewrite_cond => ['%{REQUEST_URI} [A-Z]'],
       rewrite_map  => ['lc int:tolower'],
-      rewrite_rule => ['(.*) ${lc:$1} [R=301,L]'],
+      rewrite_rule => ["(.*) \${lc:\$1} [R=301,L]"],
     }
-  ]
+  ],
 }
 
 apache::vhost { 'sixteenth.example.com ssl':
@@ -229,20 +229,17 @@ apache::vhost { 'subdomain.loc':
   serveraliases   => ['*.loc',],
 }
 
-# Vhost with SSLProtocol,SSLCipherSuite, SSLHonorCipherOrder
+# Vhost with SSL (SSLProtocol, SSLCipherSuite & SSLHonorCipherOrder from default)
 apache::vhost { 'securedomain.com':
-        priority             => '10',
-        vhost_name           => 'www.securedomain.com',
-        port                 => '443',
-        docroot              => '/var/www/secure',
-        ssl                  => true,
-        ssl_cert             => '/etc/ssl/securedomain.cert',
-        ssl_key              => '/etc/ssl/securedomain.key',
-        ssl_chain            => '/etc/ssl/securedomain.crt',
-        ssl_protocol         => '-ALL +TLSv1',
-        ssl_cipher           => 'ALL:!aNULL:!ADH:!eNULL:!LOW:!EXP:RC4+RSA:+HIGH:+MEDIUM',
-        ssl_honorcipherorder => 'On',
-        add_listen           => false,
+  priority   => '10',
+  vhost_name => 'www.securedomain.com',
+  port       => '443',
+  docroot    => '/var/www/secure',
+  ssl        => true,
+  ssl_cert   => '/etc/ssl/securedomain.cert',
+  ssl_key    => '/etc/ssl/securedomain.key',
+  ssl_chain  => '/etc/ssl/securedomain.crt',
+  add_listen => false,
 }
 
 # Vhost with access log environment variables writing control

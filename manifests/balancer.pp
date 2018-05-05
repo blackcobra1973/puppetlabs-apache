@@ -35,6 +35,9 @@
 # apache::balancermember with array arguments, which allows you to deploy
 # everything in 1 run)
 #
+# [*options*]
+# Array, default empty. If given, additional directives may be added to the
+# <Proxy balancer://xyz OPTIONS> block.
 #
 # === Examples
 #
@@ -46,13 +49,28 @@ define apache::balancer (
   $proxy_set = {},
   $collect_exported = true,
   $target = undef,
+  $options = [],
 ) {
   include ::apache::mod::proxy_balancer
+
+  if versioncmp($apache::mod::proxy_balancer::apache_version, '2.4') >= 0 {
+    $lbmethod = $proxy_set['lbmethod'] ? {
+      undef   => 'byrequests',
+      default => $proxy_set['lbmethod'],
+    }
+    ensure_resource('apache::mod', "lbmethod_${lbmethod}")
+  }
 
   if $target {
     $_target = $target
   } else {
     $_target = "${::apache::confd_dir}/balancer_${name}.conf"
+  }
+
+  if !empty($options) {
+    $_options = " ${join($options, ' ')}"
+  } else {
+    $_options = ''
   }
 
   concat { "apache_balancer_${name}":
@@ -66,7 +84,7 @@ define apache::balancer (
   concat::fragment { "00-${name}-header":
     target  => "apache_balancer_${name}",
     order   => '01',
-    content => "<Proxy balancer://${name}>\n",
+    content => "<Proxy balancer://${name}${_options}>\n",
   }
 
   if $collect_exported {
